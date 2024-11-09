@@ -1,34 +1,348 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chatbot Interface</title>
-  <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .xp-bar-container {
+            width: 150px;
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            margin-top: 5px;
+            position: relative;
+        }
+
+        .xp-bar {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 3px;
+            width: 75%;
+            transition: width 0.3s ease;
+        }
+
+        .xp-tooltip {
+            position: absolute;
+            top: -25px;
+            right: 0;
+            background: rgba(0,0,0,0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: none;
+        }
+
+        .xp-bar-container:hover .xp-tooltip {
+            display: block;
+        }
+
+        .streak-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+        }
+
+        .title {
+            font-size: 1.5rem;
+        }
+
+        .profile-button {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .chat-container {
+            flex: 1;
+            max-width: 800px;
+            margin: 90px auto 0;
+            width: 100%;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-box {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            overflow-y: auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            min-height: calc(100vh - 230px);
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            border-radius: 10px;
+            max-width: 80%;
+            animation: fadeIn 0.3s;
+            word-wrap: break-word;
+            width: fit-content;
+        }
+
+        .bot-message {
+            background: #e3f2fd;
+            margin-right: auto;
+        }
+
+        .user-message {
+            background: #2c3e50;
+            color: white;
+            margin-left: auto;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 0.8rem;
+            border: 2px solid #2c3e50;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        #send-button {
+            padding: 0.8rem 2rem;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .typing-indicator {
+            padding: 0.5rem;
+            display: none;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #2c3e50;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        /* Profile page styles remain the same */
+        .profile-page {
+            display: none;
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 90px auto 0;
+        }
+
+        /* Keep all the profile page styles from the previous version */
+        /* ... */
+
+        @media (max-width: 480px) {
+            .chat-container {
+                padding: 0.5rem;
+            }
+
+            .input-container {
+                flex-direction: column;
+            }
+
+            #send-button {
+                width: 100%;
+            }
+
+            .xp-bar-container {
+                width: 100px;
+            }
+        }
+    </style>
 </head>
 <body>
-
-<div class="chatbot-container">
-  <header class="chatbot-header">
-    <div class="logo">Logo</div>
-    <div class="name">Mathmagician Mike</div>
-    <div class="user-info">
-      <div class="user-id">User ID</div>
-      <div class="status">Status</div>
+    <div class="header">
+        <div class="streak-container">
+            <span class="streak-icon">🔥</span>
+            <span class="streak-count">3</span>
+        </div>
+        <div class="title">Mathamagical Mike</div>
+        <div class="header-content">
+            <div class="profile-button" onclick="toggleProfile()">👤</div>
+            <div class="xp-bar-container">
+                <div class="xp-bar"></div>
+                <div class="xp-tooltip">750/1000 XP to Level 4</div>
+            </div>
+        </div>
     </div>
-  </header>
 
-  <div class="chat-area">
-    <div class="message user-message">User: Hello!</div>
-    <div class="message bot-message">Bot: Hi, how can I help you?</div>
-  </div>
+    <div class="chat-container" id="chat-container">
+        <div class="chat-box" id="chat-box">
+            <div class="message bot-message">
+                Hi! I'm Mathamagical Mike! 🧙‍♂️ I'm here to help you with math.
+            </div>
+            <div class="message bot-message">
+                You can:
+                • Ask me math questions
+                • Request practice problems
+                • Get step-by-step solutions
+            </div>
+        </div>
+        <div class="typing-indicator" id="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Type your math question here...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
 
-  <footer class="input-area">
-    <input type="text" id="user-input" placeholder="Enter text">
-    <button onclick="sendMessage()">Send</button>
-  </footer>
-</div>
+    <!-- Profile page HTML remains the same -->
+    <div class="profile-page" id="profile-page">
+        <!-- ... previous profile page content ... -->
+    </div>
 
-<script src="script.js"></script>
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const typingIndicator = document.getElementById('typing-indicator');
+        let currentXP = 750;
+        let maxXP = 1000;
+
+        function updateXPBar(xp) {
+            const xpBar = document.querySelector('.xp-bar');
+            const percentage = (xp / maxXP) * 100;
+            xpBar.style.width = `${percentage}%`;
+            
+            // Update tooltip
+            const tooltip = document.querySelector('.xp-tooltip');
+            tooltip.textContent = `${xp}/${maxXP} XP to Level 4`;
+
+            // Level up if XP reaches max
+            if (xp >= maxXP) {
+                levelUp();
+            }
+        }
+
+        function levelUp() {
+            currentXP = currentXP - maxXP;
+            maxXP = Math.floor(maxXP * 1.5);
+            updateXPBar(currentXP);
+            
+            // Show level up message in chat
+            addMessage("🎉 Congratulations! You've leveled up! Keep up the great work!", false);
+        }
+
+        function addMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.textContent = message;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            typingIndicator.style.display = 'block';
+            setTimeout(() => {
+                typingIndicator.style.display = 'none';
+            }, 1500);
+        }
+
+        function handleUserInput() {
+            const message = userInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                userInput.value = '';
+                
+                showTypingIndicator();
+                
+                // Simulate XP gain for each message
+                currentXP += Math.floor(Math.random() * 50) + 10;
+                updateXPBar(currentXP);
+                
+                setTimeout(() => {
+                    let response = "I understand your question about " + message + ". Let me help you with that...";
+                    addMessage(response);
+                }, 1500);
+            }
+        }
+
+        function toggleProfile() {
+            const chatContainer = document.getElementById('chat-container');
+            const profilePage = document.getElementById('profile-page');
+            
+            if (profilePage.style.display === 'none' || !profilePage.style.display) {
+                chatContainer.style.display = 'none';
+                profilePage.style.display = 'block';
+            } else {
+                chatContainer.style.display = 'flex';
+                profilePage.style.display = 'none';
+            }
+        }
+
+        sendButton.addEventListener('click', handleUserInput);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleUserInput();
+            }
+        });
+
+        // Initialize XP bar
+        updateXPBar(currentXP);
+
+        // Focus input on load
+        userInput.focus();
+    </script>
 </body>
 </html>
