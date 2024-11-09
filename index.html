@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <style>
         * {
@@ -23,7 +24,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             position: fixed;
             width: 100%;
             top: 0;
@@ -39,7 +40,7 @@
         .xp-bar-container {
             width: 150px;
             height: 6px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 3px;
             margin-top: 5px;
             position: relative;
@@ -57,7 +58,7 @@
             position: absolute;
             top: -25px;
             right: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.8);
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 0.8rem;
@@ -73,7 +74,7 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.5rem 1rem;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 20px;
         }
 
@@ -84,7 +85,7 @@
         .profile-button {
             width: 40px;
             height: 40px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -110,7 +111,7 @@
             padding: 1rem;
             margin-bottom: 1rem;
             overflow-y: auto;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             min-height: calc(100vh - 230px);
         }
 
@@ -141,7 +142,7 @@
             background: white;
             padding: 1rem;
             border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         #user-input {
@@ -208,6 +209,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <div class="streak-container">
@@ -227,11 +229,11 @@
     <div class="chat-container" id="chat-container">
         <div class="chat-box" id="chat-box">
             <div class="message bot-message">
-                Hi! I'm Mathamagical Mike! 🧙‍♂️ I'm here to help you with math.
+                Hi! I'm Mathamagical Mike! 🧙‍♂️ I'm here to help you with maths.
             </div>
             <div class="message bot-message">
                 You can:
-                • Ask me math questions
+                • Ask me maths questions
                 • Request practice problems
                 • Get step-by-step solutions
             </div>
@@ -264,7 +266,7 @@
             const xpBar = document.querySelector('.xp-bar');
             const percentage = (xp / maxXP) * 100;
             xpBar.style.width = `${percentage}%`;
-            
+
             // Update tooltip
             const tooltip = document.querySelector('.xp-tooltip');
             tooltip.textContent = `${xp}/${maxXP} XP to Level 4`;
@@ -279,7 +281,7 @@
             currentXP = currentXP - maxXP;
             maxXP = Math.floor(maxXP * 1.5);
             updateXPBar(currentXP);
-            
+
             // Show level up message in chat
             addMessage("🎉 Congratulations! You've leveled up! Keep up the great work!", false);
         }
@@ -299,29 +301,75 @@
             }, 1500);
         }
 
-        function handleUserInput() {
+        async function handleUserInput() {
             const message = userInput.value.trim();
             if (message) {
                 addMessage(message, true);
                 userInput.value = '';
-                
                 showTypingIndicator();
-                
+
                 // Simulate XP gain for each message
                 currentXP += Math.floor(Math.random() * 50) + 10;
                 updateXPBar(currentXP);
-                
-                setTimeout(() => {
-                    let response = "I understand your question about " + message + ". Let me help you with that...";
+
+                // Wait for the bot response
+                try {
+                    const botResponse = await getGPTResponse(message);
+                    let response = botResponse;
                     addMessage(response);
-                }, 1500);
+                } catch (error) {
+                    console.error("Error getting response:", error);
+                    addMessage("Sorry, there was an error connecting to the chatbot.");
+                } finally {
+                    hideTypingIndicator();
+                }
+            }
+        }
+
+
+        async function getGPTResponse(userMessage) {
+            const apiEndpoint = "https://educationhackathon.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview";
+            const apiKey = "F4t6ZhKWbThgotYQuaNURBVcJsDcqL4xkebqwPiVrVHw3s8d7dTjJQQJ99AKACfhMk5XJ3w3AAABACOGoNkI";
+
+            const headers = {
+                "Content-Type": "application/json",
+                "api-key": apiKey
+            };
+
+            const body = {
+                messages: [
+                    {
+                        role: "system", content: "You avoid using latex and just unicode for maths. You are a charming maths assistant by the name Mike, you make cringy maths jokes. You engage users in a friendly and approachable manner. You are a helpful assistant who is always ready to help users with their maths. You should specifically link to real life scenarios. When a user asks about a specific topic give them background information and explain how the topic is used in the real world, list real life jobs that use that field. You will be asked to create worksheets. You should make the questions link to real life scenarios and be prepared to give the user worked solutions hints and mark answers. If you are aksed for questions try to not talk too much before hand and just give the question (while still keeping you patented Mathmagical Mike Charm) At least one joke per message. Please do list some jobs when asked. Remember to format with newlines"
+                    },
+                    {role: "user", content: userMessage}
+                ],
+                max_tokens: 500, // Adjust the max tokens based on your needs
+                temperature: 0.7 // Adjust the creativity of the response
+            };
+
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: "POST",
+                    headers: headers,
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error("Error fetching response from GPT-4:", error);
+                return "Sorry, there was an error connecting to the chatbot.";
             }
         }
 
         function toggleProfile() {
             const chatContainer = document.getElementById('chat-container');
             const profilePage = document.getElementById('profile-page');
-            
+
             if (profilePage.style.display === 'none' || !profilePage.style.display) {
                 chatContainer.style.display = 'none';
                 profilePage.style.display = 'block';
@@ -345,4 +393,5 @@
         userInput.focus();
     </script>
 </body>
+
 </html>
