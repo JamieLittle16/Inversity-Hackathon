@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <style>
         * {
@@ -23,7 +24,49 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .xp-bar-container {
+            width: 150px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            margin-top: 5px;
+            position: relative;
+        }
+
+        .xp-bar {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 3px;
+            width: 75%;
+            transition: width 0.3s ease;
+        }
+
+        .xp-tooltip {
+            position: absolute;
+            top: -25px;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: none;
+        }
+
+        .xp-bar-container:hover .xp-tooltip {
+            display: block;
         }
 
         .streak-container {
@@ -31,16 +74,8 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.5rem 1rem;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 20px;
-        }
-
-        .streak-icon {
-            font-size: 1.2rem;
-        }
-
-        .streak-count {
-            font-weight: bold;
         }
 
         .title {
@@ -50,7 +85,7 @@
         .profile-button {
             width: 40px;
             height: 40px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -59,14 +94,10 @@
             transition: background 0.3s;
         }
 
-        .profile-button:hover {
-            background: rgba(255,255,255,0.2);
-        }
-
         .chat-container {
             flex: 1;
             max-width: 800px;
-            margin: 0 auto;
+            margin: 90px auto 0;
             width: 100%;
             padding: 1rem;
             display: flex;
@@ -80,7 +111,8 @@
             padding: 1rem;
             margin-bottom: 1rem;
             overflow-y: auto;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            min-height: calc(100vh - 230px);
         }
 
         .message {
@@ -91,11 +123,6 @@
             animation: fadeIn 0.3s;
             word-wrap: break-word;
             width: fit-content;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .bot-message {
@@ -111,14 +138,16 @@
 
         .input-container {
             display: flex;
-            flex-wrap: wrap;
             gap: 1rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         #user-input {
             flex: 1;
-            min-width: 200px;
-            padding: 1rem;
+            padding: 0.8rem;
             border: 2px solid #2c3e50;
             border-radius: 25px;
             font-size: 1rem;
@@ -126,18 +155,13 @@
         }
 
         #send-button {
-            padding: 1rem 2rem;
+            padding: 0.8rem 2rem;
             background: #2c3e50;
             color: white;
             border: none;
             border-radius: 25px;
             cursor: pointer;
             transition: background 0.3s;
-            white-space: nowrap;
-        }
-
-        #send-button:hover {
-            background: #34495e;
         }
 
         .typing-indicator {
@@ -155,15 +179,22 @@
             animation: bounce 1.4s infinite ease-in-out;
         }
 
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes bounce {
-            0%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
+        /* Profile page styles remain the same */
+        .profile-page {
+            display: none;
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 90px auto 0;
         }
 
+        /* Keep all the profile page styles from the previous version */
+        /* ... */
+
         @media (max-width: 480px) {
+            .chat-container {
+                padding: 0.5rem;
+            }
+
             .input-container {
                 flex-direction: column;
             }
@@ -171,9 +202,14 @@
             #send-button {
                 width: 100%;
             }
+
+            .xp-bar-container {
+                width: 100px;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <div class="streak-container">
@@ -181,21 +217,25 @@
             <span class="streak-count">3</span>
         </div>
         <div class="title">Mathamagical Mike</div>
-        <div class="profile-button">👤</div>
+        <div class="header-content">
+            <div class="profile-button" onclick="toggleProfile()">👤</div>
+            <div class="xp-bar-container">
+                <div class="xp-bar"></div>
+                <div class="xp-tooltip">750/1000 XP to Level 4</div>
+            </div>
+        </div>
     </div>
-    <div class="chat-container">
+
+    <div class="chat-container" id="chat-container">
         <div class="chat-box" id="chat-box">
             <div class="message bot-message">
-                Hi! I'm Mathamagical Mike! 🧙‍♂️ I'm here to help you with math.
+                Hi! I'm Mathamagical Mike! 🧙‍♂️ I'm here to help you with maths.
             </div>
             <div class="message bot-message">
                 You can:
-                • Ask me math questions
+                • Ask me maths questions
                 • Request practice problems
                 • Get step-by-step solutions
-            </div>
-            <div class="message bot-message">
-                What would you like to learn today?
             </div>
         </div>
         <div class="typing-indicator" id="typing-indicator">
@@ -209,27 +249,42 @@
         </div>
     </div>
 
+    <!-- Profile page HTML remains the same -->
+    <div class="profile-page" id="profile-page">
+        <!-- ... previous profile page content ... -->
+    </div>
+
     <script>
         const chatBox = document.getElementById('chat-box');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const typingIndicator = document.getElementById('typing-indicator');
+        let currentXP = 750;
+        let maxXP = 1000;
 
-        // Sample responses for the demo
-        const responses = {
-            "generate": {
-                type: "question",
-                content: "Here's a problem for you:\n\nSolve the quadratic equation: x² + 5x + 6 = 0"
-            },
-            "help": {
-                type: "info",
-                content: "I can help you with:\n• Algebra\n• Geometry\n• Calculus\n• Statistics\nJust ask your question!"
-            },
-            "solution": {
-                type: "solution",
-                content: "Let's solve this step by step:\n\n1) For x² + 5x + 6 = 0\n2) Use factoring: (x + 2)(x + 3) = 0\n3) Therefore, x = -2 or x = -3"
+        function updateXPBar(xp) {
+            const xpBar = document.querySelector('.xp-bar');
+            const percentage = (xp / maxXP) * 100;
+            xpBar.style.width = `${percentage}%`;
+
+            // Update tooltip
+            const tooltip = document.querySelector('.xp-tooltip');
+            tooltip.textContent = `${xp}/${maxXP} XP to Level 4`;
+
+            // Level up if XP reaches max
+            if (xp >= maxXP) {
+                levelUp();
             }
-        };
+        }
+
+        function levelUp() {
+            currentXP = currentXP - maxXP;
+            maxXP = Math.floor(maxXP * 1.5);
+            updateXPBar(currentXP);
+
+            // Show level up message in chat
+            addMessage("🎉 Congratulations! You've leveled up! Keep up the great work!", false);
+        }
 
         function addMessage(message, isUser = false) {
             const messageDiv = document.createElement('div');
@@ -246,27 +301,81 @@
             }, 1500);
         }
 
-        function handleUserInput() {
+        async function handleUserInput() {
             const message = userInput.value.trim();
             if (message) {
                 addMessage(message, true);
                 userInput.value = '';
-                
                 showTypingIndicator();
-                
-                setTimeout(() => {
-                    let response;
-                    if (message.toLowerCase().includes('generate') || message.toLowerCase().includes('question')) {
-                        response = responses.generate.content;
-                    } else if (message.toLowerCase().includes('help')) {
-                        response = responses.help.content;
-                    } else if (message.toLowerCase().includes('solution') || message.toLowerCase().includes('solve')) {
-                        response = responses.solution.content;
-                    } else {
-                        response = "I understand your question about " + message + ". Let me help you with that...";
-                    }
+
+                // Simulate XP gain for each message
+                currentXP += Math.floor(Math.random() * 50) + 10;
+                updateXPBar(currentXP);
+
+                // Wait for the bot response
+                try {
+                    const botResponse = await getGPTResponse(message);
+                    let response = botResponse;
                     addMessage(response);
-                }, 1500);
+                } catch (error) {
+                    console.error("Error getting response:", error);
+                    addMessage("Sorry, there was an error connecting to the chatbot.");
+                } finally {
+                    hideTypingIndicator();
+                }
+            }
+        }
+
+
+        async function getGPTResponse(userMessage) {
+            const apiEndpoint = "https://educationhackathon.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview";
+            const apiKey = "F4t6ZhKWbThgotYQuaNURBVcJsDcqL4xkebqwPiVrVHw3s8d7dTjJQQJ99AKACfhMk5XJ3w3AAABACOGoNkI";
+
+            const headers = {
+                "Content-Type": "application/json",
+                "api-key": apiKey
+            };
+
+            const body = {
+                messages: [
+                    {
+                        role: "system", content: "You avoid using latex and just unicode for maths. You are a charming maths assistant by the name Mike, you make cringy maths jokes. You engage users in a friendly and approachable manner. You are a helpful assistant who is always ready to help users with their maths. You should specifically link to real life scenarios. When a user asks about a specific topic give them background information and explain how the topic is used in the real world, list real life jobs that use that field. You will be asked to create worksheets. You should make the questions link to real life scenarios and be prepared to give the user worked solutions hints and mark answers. If you are aksed for questions try to not talk too much before hand and just give the question (while still keeping you patented Mathmagical Mike Charm) At least one joke per message. Please do list some jobs when asked. Remember to format with newlines"
+                    },
+                    {role: "user", content: userMessage}
+                ],
+                max_tokens: 500, // Adjust the max tokens based on your needs
+                temperature: 0.7 // Adjust the creativity of the response
+            };
+
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: "POST",
+                    headers: headers,
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error("Error fetching response from GPT-4:", error);
+                return "Sorry, there was an error connecting to the chatbot.";
+            }
+        }
+
+        function toggleProfile() {
+            const chatContainer = document.getElementById('chat-container');
+            const profilePage = document.getElementById('profile-page');
+
+            if (profilePage.style.display === 'none' || !profilePage.style.display) {
+                chatContainer.style.display = 'none';
+                profilePage.style.display = 'block';
+            } else {
+                chatContainer.style.display = 'flex';
+                profilePage.style.display = 'none';
             }
         }
 
@@ -277,8 +386,12 @@
             }
         });
 
+        // Initialize XP bar
+        updateXPBar(currentXP);
+
         // Focus input on load
         userInput.focus();
     </script>
 </body>
+
 </html>
